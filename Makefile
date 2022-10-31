@@ -1,10 +1,16 @@
 CXXFLAGS_BASE := -std=c++20 -Wall -Wextra -Wpedantic
 # ---< FIND MY HEADERS >---
 CXXFLAGS_INC := -Iinc
+# pkgconf: $ echo $PKG_CONFIG_PATH
 # ---< SDL >---
 CXXFLAGS_SDL := `pkgconf --cflags sdl2`
-LDLIBS := `pkgconf --libs sdl2`
-CXXFLAGS := $(CXXFLAGS_BASE) $(CXXFLAGS_INC) $(CXXFLAGS_SDL)
+LDLIBS_SDL := `pkgconf --libs sdl2`
+# ---< SDL Audio >---
+CXXFLAGS_SDL_MIXER := `pkgconf --cflags SDL2_mixer`
+LDLIBS_SDL_MIXER := `pkgconf --libs SDL2_mixer`
+# ---< Put it all together >---
+CXXFLAGS := $(CXXFLAGS_BASE) $(CXXFLAGS_INC) $(CXXFLAGS_SDL) $(CXXFLAGS_SDL_MIXER)
+LDLIBS := $(LDLIBS_SDL) $(LDLIBS_SDL_MIXER)
 
 # ---< Define my make variables >---
 # Identify the main source file

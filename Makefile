@@ -1,13 +1,18 @@
 CXXFLAGS_BASE := -std=c++20 -Wall -Wextra -Wpedantic
 # ---< FIND MY HEADERS >---
 CXXFLAGS_INC := -Iinc
-# pkgconf: $ echo $PKG_CONFIG_PATH
+# pkg-config: $ echo $PKG_CONFIG_PATH
 # ---< SDL >---
-CXXFLAGS_SDL := `pkgconf --cflags sdl2`
-LDLIBS_SDL := `pkgconf --libs sdl2`
+#  Ubuntu:
+#  $ apt search libsdl2-dev
+#  $ apt search libsdl2-mixer-dev
+#  $ apt search libsdl2-image-dev
+#  $ apt search libsdl2-ttf-dev
+CXXFLAGS_SDL := `pkg-config --cflags sdl2`
+LDLIBS_SDL := `pkg-config --libs sdl2`
 # ---< SDL Audio >---
-CXXFLAGS_SDL_MIXER := `pkgconf --cflags SDL2_mixer`
-LDLIBS_SDL_MIXER := `pkgconf --libs SDL2_mixer`
+CXXFLAGS_SDL_MIXER := `pkg-config --cflags SDL2_mixer`
+LDLIBS_SDL_MIXER := `pkg-config --libs SDL2_mixer`
 # ---< Put it all together >---
 CXXFLAGS := $(CXXFLAGS_BASE) $(CXXFLAGS_INC) $(CXXFLAGS_SDL) $(CXXFLAGS_SDL_MIXER)
 LDLIBS := $(LDLIBS_SDL) $(LDLIBS_SDL_MIXER)
@@ -71,14 +76,14 @@ $(EXE): $(SRC)
 # Run the program like this (see 'tags' recipe below):
 # ./ctags-dlist build/main.d
 .PHONY: ctags-dlist
-$(BUILD_DIR)/ctags-dlist: ctags-dlist.cpp
+$(BUILD_DIR)/ctags-dlist: ctags-dlist.cpp | $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS_BASE) -o $@ $^
 
 # --- Get the list of dependencies ---
 # The expanded recipe for listing dependencies looks like this:
 # g++ -std=c++20 -Wall -Wextra -Wpedantic -M main.cpp -MF main.d
 .PHONY: $(HEADER_LIST)
-$(HEADER_LIST): $(SRC)
+$(HEADER_LIST): $(SRC) | $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) -M $^ -MF $@
 
 # --- Make the tags file ---
@@ -88,8 +93,10 @@ $(HEADER_LIST): $(SRC)
 # Generate lib tags from 'headers.txt'.
 # Then append my source code tags to that tags file.
 .PHONY: tags
-tags: $(HEADER_LIST) $(BUILD_DIR)/ctags-dlist
+tags: $(HEADER_LIST) $(BUILD_DIR)/ctags-dlist | $(BUILD_DIR)
 	$(BUILD_DIR)/ctags-dlist $(HEADER_LIST)
 	ctags --c-kinds=+p+x -L headers.txt
 	ctags --c-kinds=+p+x+l -a $(SRC)
 
+$(BUILD_DIR):
+	mkdir -p $@
